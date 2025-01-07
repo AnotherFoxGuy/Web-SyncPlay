@@ -14,7 +14,7 @@ interface Props {
 
 const Layout: FC<Props> = ({
   meta,
-  showNavbar = true,
+  showNavbar = false,
   error,
   roomId,
   children,

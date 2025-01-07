@@ -9,7 +9,7 @@ interface Props {
 
 const Footer: FC<Props> = ({ error }) => {
   return (
-    <footer className={"flex flex-col bg-dark-900 py-1 px-4"}>
+    <footer className={"flex flex-col bg-dark-900 py-1 px-2"}>
       {error && <div>Error {error}</div>}
       <div className={"text-sm flex flex-col gap-1 sm:flex-row sm:items-center"}>
         <div className={"flex flex-row items-center"}>

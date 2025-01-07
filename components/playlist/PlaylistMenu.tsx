@@ -1,6 +1,11 @@
 import { FC, useEffect, useRef, useState } from "react"
 import { MediaElement, Playlist, RoomState } from "../../lib/types"
-import { DragDropContext as _DragDropContext, Droppable as _Droppable, DragDropContextProps, DroppableProps } from "react-beautiful-dnd"
+import {
+  DragDropContext as _DragDropContext,
+  Droppable as _Droppable,
+  DragDropContextProps,
+  DroppableProps,
+} from "react-beautiful-dnd"
 import classNames from "classnames"
 import { Socket } from "socket.io-client"
 import {
@@ -44,6 +49,10 @@ const PlaylistMenu: FC<Props> = ({ socket }) => {
         setPlaylist(room.targetState.playlist)
       }
     })
+
+    setTimeout(() => {
+      setExpanded(false)
+    }, 2000)
   }, [socket])
 
   const addItem = (newUrl: string) => {
