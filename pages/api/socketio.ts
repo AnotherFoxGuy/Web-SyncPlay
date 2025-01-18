@@ -43,14 +43,14 @@ const ioHandler = (_: NextApiRequest, res: NextApiResponse) => {
           if (user.lastHeartbeat < threshold || user.lastHeartbeat < 10) {
             console.log(`Removing dead user ${user.name}`)
             await decUsers()
-            room.users = room.users.filter((u) => u.uid !== user.uid)
+            room.users = room.users.filter((u) => u.uid != user.uid)
 
-            if (room.ownerId === user.uid) {
+            if (room.ownerId === user.uid && room.users.length > 0) {
               room.ownerId = room.users[0].uid
             }
           }
         }
-        if (room.users.length === 0) {
+        if (room.users.length == 0) {
           await deleteRoom(room.id)
         } else {
           await broadcast(room)
