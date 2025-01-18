@@ -45,6 +45,7 @@ export interface UserState {
   name: string
   avatar: string
   player: PlayerState
+  lastHeartbeat: number
 }
 
 export enum Command {

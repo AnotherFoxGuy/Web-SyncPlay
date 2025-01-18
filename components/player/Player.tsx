@@ -222,6 +222,10 @@ const Player: FC<Props> = ({ roomId, socket, fullHeight }) => {
         _setPlaylist(update.playlist)
       }
     })
+
+    setInterval(() => {
+      socket.emit("heartbeat")
+    }, 30 * 1000)
   }, [socket])
 
   useEffect(() => {

@@ -31,6 +31,7 @@ export interface ClientToServerEvents {
   playEnded: () => void
   fetch: () => void
   error: () => void
+  heartbeat: () => void
 }
 
 export function playItemFromPlaylist(

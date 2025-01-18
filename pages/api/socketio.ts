@@ -7,17 +7,20 @@ import {
   deleteRoom,
   getRoom,
   incUsers,
+  listRooms,
   roomExists,
   setRoom,
+  setUserCount,
 } from "../../lib/cache"
 import { createNewRoom, createNewUser, updateLastSync } from "../../lib/room"
 import { Playlist, RoomState, UserState } from "../../lib/types"
 import { isUrl } from "../../lib/utils"
+import { CronJob } from "cron"
 
 const ioHandler = (_: NextApiRequest, res: NextApiResponse) => {
   // @ts-ignore
   if (res.socket !== null && "server" in res.socket && !res.socket.server.io) {
-    console.log("*First use, starting socket.io")
+    console.log("* First use, starting socket.io")
 
     const io = new Server<ClientToServerEvents, ServerToClientEvents>(
       // @ts-ignore
@@ -26,6 +29,52 @@ const ioHandler = (_: NextApiRequest, res: NextApiResponse) => {
         path: "/api/socketio",
       }
     )
+
+    const cleanupCron = new CronJob("*/5 * * * *", async () => {
+      console.log("Running cleanup cron job")
+      const rooms = await listRooms()
+      const threshold = Date.now() - 60 * 1000
+
+      for (const roomid of rooms) {
+        const room = await getRoom(roomid)
+        if (room == null) continue
+
+        for (const user of room.users) {
+          if (user.lastHeartbeat < threshold || user.lastHeartbeat < 10) {
+            console.log(`Removing dead user ${user.name}`)
+            await decUsers()
+            room.users = room.users.filter((u) => u.uid !== user.uid)
+
+            if (room.ownerId === user.uid) {
+              room.ownerId = room.users[0].uid
+            }
+          }
+        }
+        if (room.users.length === 0) {
+          await deleteRoom(room.id)
+        } else {
+          await broadcast(room)
+        }
+      }
+      console.log("Done running cleanup cron job")
+    })
+    cleanupCron.start()
+
+    const recountCron = new CronJob("0 * * * *", async () => {
+      console.log("Running recount cron job")
+      const rooms = await listRooms()
+      let userCount = 0
+
+      for (const roomid of rooms) {
+        const room = await getRoom(roomid)
+        if (room == null) continue
+        userCount += room.users.length
+      }
+
+      await setUserCount(userCount)
+      console.log("Done running recount cron job")
+    })
+    recountCron.start()
 
     const broadcast = async (room: string | RoomState) => {
       const roomId = typeof room === "string" ? room : room.id
@@ -308,6 +357,22 @@ const ioHandler = (_: NextApiRequest, res: NextApiResponse) => {
 
           room.serverTime = new Date().getTime()
           socket.emit("update", room)
+        })
+
+        socket.on("heartbeat", async () => {
+          const room = await getRoom(roomId)
+          if (room === null) {
+            throw new Error(
+              "Impossible non existing room, cannot send anything:" + roomId
+            )
+          }
+          room.users = room.users.map((u) => {
+            if (u.socketIds[0] == socket.id) {
+              u.lastHeartbeat = Date.now()
+            }
+            return u
+          })
+          await setRoom(roomId, room)
         })
       }
     )

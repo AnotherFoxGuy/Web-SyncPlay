@@ -66,6 +66,10 @@ export const decUsers = async () => {
   return await client.decr("userCount")
 }
 
+export const setUserCount = async (count: number) => {
+  return await client.set("userCount", count)
+}
+
 export const wipeCache = async () => {
   return await client.flushAll()
 }
