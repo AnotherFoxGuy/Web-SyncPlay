@@ -46,6 +46,7 @@ export const createNewUser = async (roomId: string, socketId: string) => {
     } as unknown as PlayerState,
     socketIds: [socketId],
     uid: socketId,
+    lastHeartbeat: Date.now(),
   })
 
   await setRoom(roomId, room)
